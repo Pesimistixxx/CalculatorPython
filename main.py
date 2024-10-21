@@ -1,5 +1,5 @@
 def inputCalculations(inp):
-    c = 0.0
+    c = None
     res = 0
     maxlen = 0
     isfrac = False
@@ -9,54 +9,63 @@ def inputCalculations(inp):
         if elem == "и":
             isfrac = True
         elif elem in strtoint:
-            if type(strtoint[elem]) == int:
+            if elem == "открывается":
+                nums.append("(")
+            elif elem == "закрывается":
+                if c  != None:
+                    nums.append(c)
+                    c = None
+                nums.append(")")
+            elif type(strtoint[elem]) == int:
                 if strtoint[elem] == 0:
                     iszero = True
                 if isfrac == False:
+                    if c == None:
+                        c = 0.0
                     c += strtoint[elem]
                 else:
+                    if c == None:
+                        c = 0.0
                     maxlen = max(len(str(strtoint[elem])), maxlen)
                     c += strtoint[elem] / (10 ** (maxlen))
-                #print(c)
-            elif elem == "плюс" or elem == "минус" or elem == "умножить" or elem == "делить" or elem == "остаток":
-                nums.append(c)
+            elif elem == "плюс" or elem == "минус" or elem == "умножить" or elem == "делить" or elem == "остаток" or elem == "разделить":
+                if c != None:
+                    nums.append(c)
                 isfrac = False
                 maxlen = 0
                 nums.append(strtoint[elem])
-                c = 0.0
-        elif elem == "деления" or elem == "от" or elem == "на" or elem in fracword2 or elem in fracword:
+                c = None
+        elif elem == "деления" or elem == "от" or elem == "на" or elem == "скобка" or elem in fracword2 or elem in fracword or elem in fracword3:
             continue
         else:
             return "Неправильный Ввод"
-    nums.append(c)
+    if nums.count("(") != nums.count(")"):
+        return "Неправильный Ввод"
+    if c == None and nums[-1] != ")":
+        return "Неправильный Ввод"
+    elif c != None:
+        nums.append(c)
+    print(nums)
     if iszero:
         if len([item for item in nums if item != 0]) <= 1:
             return "Неправильный Ввод"
     else:
         if len([item for item in nums if item != 0]) <= 2:
             return "Неправильный Ввод"
-    for i in range(0, len(nums)-2, 3):
-        firstop = nums[i]
-        secondop = nums[i+2]
-        if nums[i + 1] == "+":
-            res = firstop + secondop
-        elif nums[i + 1] == "-":
-            res = firstop - secondop
-        elif nums[i + 1] == "*":
-            res = firstop * secondop
-        elif nums[i+1] == "/":
-            if secondop != 0:
-                res = firstop/secondop
-            else:
-                return "Ошибка деления на 0"
-        elif nums[i+1] == "%":
-            res = firstop % secondop
-    return res
-
-
+    strnums = ''.join(map(str, nums))
+    strnums.replace("--","+")
+    try:
+        return eval(strnums)
+    except:
+        if "/0" in strnums:
+            return "Ошибка деления на 0"
+        else:
+            return "Неправильный ввод"
 def printCalculations(res):
     resbybit = [[],[]]
+    print(res)
     res = round(res,4)
+    #print(res)
     res2 = str(res).split(".")
     for i in range(2):
         lc = len(res2[i])
@@ -72,14 +81,19 @@ def printCalculations(res):
     if len([item for item in resbybit[1] if item != 0]) != 0:
         print("и", end = " ")
         for elem in resbybit[1]:
+            if elem == 0:
+                continue
             print(doubletostr[elem], end = " ")
-        if res2[1][-1] != "1":
-            print(fracword[len(str(res2[1]))-1])
+        if res2[1][-1] == "1":
+            print(fracword2[len(str(res2[1]))-1])
+        elif res2[1][-1] == "2":
+            print(fracword3[len(str(res2[1])) - 1])
         else:
-            print(fracword2[len(str(res2[1])) - 1])
+            print(fracword[len(str(res2[1])) - 1])
 
 fracword = ["десятых","сотых","тысячных","десятитысячных","статысячных","миллионых"]
 fracword2 = ["десятая","сотая","тысячная","десятитысячная","статысячная","миллионая"]
+fracword3 = ["десятые","сотые","тысячные","десятитысячные","статысячные","миллионые"]
 strtoint = {
             "ноль": 0,
             "один": 1,
@@ -134,7 +148,10 @@ strtoint = {
             "минус": "-",
             "умножить": "*",
             "делить": "/",
-            "остаток": "%"
+            "разделить": "/",
+            "остаток": "%",
+            "открывается": "(",
+            "закрывается": ")"
             }
 
 doubletostr = {
@@ -237,8 +254,9 @@ inttostr = {
             }
 
 def main():
-    inp = input().split()
+    inp = input().lower().split()
     res = inputCalculations(inp)
+    #res = inputCalculations(["девятнадцать", "и", "восемьдесят", "две", "сотых", "разделить", "на", "девяносто", "девять"])
     while res == "Неправильный Ввод" or res == "Ошибка деления на 0":
         if res == "Неправильный Ввод":
             print("Неправильный Ввод")
@@ -248,3 +266,6 @@ def main():
         res = inputCalculations(inp)
     printCalculations(res)
 main()
+
+
+#девятнадцать и восемьдесят две сотых разделить на девяносто девять
